@@ -273,8 +273,12 @@ nav h1 a {
 #restaurant-hours td {
   color: #666;
 }
-
-@media only screen and (max-width: 450px){
+@media screen and (min-width: 451px){
+  #restaurants-list li {
+    display: inline-block;
+  }
+}
+@media screen and (max-width: 450px){
   nav h1 {
     padding: 18px 0;
   }
@@ -322,6 +326,12 @@ nav h1 a {
   }
   #restaurant-img, #reviews-container li {
     border-radius: 15px 0;
+  }
+  .filter-options {
+    height: auto;
+  }
+  .filter-options h2 {
+    line-height: inherit;
   }
   #maincontent select {
     width: auto;
