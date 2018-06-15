@@ -1,15 +1,15 @@
+const dbName = 'restaurants';
 /**
  * Common database helper functions.
  */
 class DBHelper {
-
   /**
    * Database URL.
    * Change this to restaurants.json file location on your server.
    */
   static get DATABASE_URL() {
-    const port = 8000 // Change this to your server port
-    return `http://localhost:${port}/data/restaurants.json`;
+    const port = 1337 // Change this to your server port
+    return `http://localhost:${port}/restaurants`;
   }
 
   /**
@@ -21,11 +21,12 @@ class DBHelper {
     xhr.onload = () => {
       if (xhr.status === 200) { // Got a success response from server!
         const json = JSON.parse(xhr.responseText);
-        const restaurants = json.restaurants;
+        const restaurants = json;
+        DBHelper.dbOpenUpdate(restaurants);
         callback(null, restaurants);
       } else { // Oops!. Got an error from server.
         const error = (`Request failed. Returned status of ${xhr.status}`);
-        callback(error, null);
+        DBHelper.dbGet(callback);
       }
     };
     xhr.send();
@@ -165,6 +166,65 @@ class DBHelper {
       animation: google.maps.Animation.DROP}
     );
     return marker;
+  }
+
+  static dbOpenUpdate(entity) {
+    let objectStore, db;
+    const indexedDB = window.indexedDB || window.mozIndexedDB || window.webkitIndexedDB || window.msIndexedDB;
+    if (!indexedDB) {
+      console.error('[ServiceWorker] Your browser doesn`t support indexedDB');
+      return;
+    }
+    const dbOpenRequest = indexedDB.open(`${dbName}-db`, 1);
+    dbOpenRequest.onerror = error => {
+      console.error('[ServiceWorker] Failed to indexedDB ', error.target);
+    };
+    dbOpenRequest.onsuccess = event => {
+      db = event.target.result;
+      if(db.transaction){
+        const transaction = db.transaction(dbName, 'readwrite');
+        transaction.oncomplete = event => {
+          console.log('[ServiceWorker] Event on transaction complete ', event);
+        }
+        objectStore = transaction.objectStore(dbName);
+        objectStore.put({ id: "1", restaurants: entity});
+        return;
+      }
+    };
+    dbOpenRequest.onupgradeneeded = event => {
+      db = event.target.result;
+        objectStore = db.createObjectStore(dbName, { keyPath: 'id', autoIncrement:false });
+        objectStore.createIndex(dbName, dbName, { unique: true });
+        objectStore.transaction.oncomplete = event => {
+          console.log('[ServiceWorker] Event on transaction complete ', event);
+          objectStore = db.transaction([ dbName ], 'readwrite').objectStore(dbName);
+          objectStore.add({ id: "1", restaurants: entity});
+          return;
+        };
+    };
+  };
+
+  static dbGet(callback){
+    const indexedDB =  window.indexedDB || window.mozIndexedDB || window.webkitIndexedDB || window.msIndexedDB;
+    let objectStore, db, data;
+    const request = indexedDB.open(`${dbName}-db`, 1);
+    request.onsuccess = event => {
+      db = request.result;
+      const transaction = db.transaction(dbName, 'readonly');
+      transaction.oncomplete = event => {
+        console.log('[ServiceWorker] Event on transaction complete ', event);
+      }
+      objectStore = transaction.objectStore(dbName);
+      objectStore.getAll().onsuccess = event => {
+        data = event.target.result;
+        if(!data){
+          console.error('[ServiceWorker] Error while fetching data => ', error);
+          callback(error, null);
+          return;
+        }
+        callback(null, data[0].restaurants);
+      }
+    }
   }
 
 }

@@ -1,6 +1,7 @@
+const cacheName = 'retaurant-cach-v0';
 self.addEventListener('install', e=> {
     e.waitUntil(
-      caches.open('retaurant_cach').then( cache=> {
+      caches.open(cacheName).then( cache=> {
         return cache.addAll([
           '/',
           '/index.html',
@@ -8,7 +9,8 @@ self.addEventListener('install', e=> {
           '/css/styles.css',
           '/js/main.js',
           '/js/restaurant_info.js',
-          '/data/restaurants.json',
+          '/js/dbhelper.js',
+          'http://localhost:1337/restaurants',
           '/img/1.jpg',
           '/img/2.jpg',
           '/img/3.jpg',
@@ -23,6 +25,19 @@ self.addEventListener('install', e=> {
       })
     );
 });
+
+self.addEventListener('activate',  event => {
+    event.waitUntil(
+        caches.keys().then(keyList=> {
+            return Promise.all(keyList.map(key=> {
+                if (key !== cacheName) {
+                    console.log('[ServiceWorker] Removing old cache', key);
+                    return caches.delete(key); 
+                }
+            }));
+        })
+    );
+});  
 
 self.addEventListener('fetch', event => {
     event.respondWith(

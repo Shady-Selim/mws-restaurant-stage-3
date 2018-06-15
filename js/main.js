@@ -5,14 +5,14 @@ var map
 var markers = []
 
 if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.register('/sw.js').then(function() {
-    console.log('Service worker registered');
-  }).catch(function() {
-    console.log('Service worker registration failed');
+  navigator.serviceWorker.register('/sw.js').then(registration=> {
+    console.log('[ServiceWorker] Service worker registered');
+  }).catch(error=> {
+    console.error('[ServiceWorker] Service worker registration failed', error);
   });
 }
 else {
-  console.log('Service worker not supported');
+  console.error('[ServiceWorker] Service worker not supported');
 }
 
 /**
@@ -35,6 +35,11 @@ fetchNeighborhoods = () => {
       fillNeighborhoodsHTML();
     }
   });
+  // fetch('http://localhost:1337/restaurants')
+  //   .then(response=> {
+  //     self.neighborhoods = response.json();
+  //     fillNeighborhoodsHTML();})
+  //   .catch(()=>{console.log("It Failed")})
 }
 
 /**
@@ -149,11 +154,15 @@ fillRestaurantsHTML = (restaurants = self.restaurants) => {
 createRestaurantHTML = (restaurant) => {
   const li = document.createElement('li');
 
-  const image = document.createElement('img');
-  image.className = 'restaurant-img';
-  image.alt = `${restaurant.name} image`;
-  image.src = DBHelper.imageUrlForRestaurant(restaurant);
-  li.append(image);
+  let imgSrc = DBHelper.imageUrlForRestaurant(restaurant);
+  if (imgSrc != "/img/undefined"){
+    const image = document.createElement('img');
+    image.className = 'restaurant-img';
+    image.alt = `${restaurant.name} image`;
+    image.setAttribute('data-echo',imgSrc + '.jpg');
+    image.src = '/img/48.png';
+    li.append(image);
+  }
 
   const name = document.createElement('h1');
   name.innerHTML = restaurant.name;
@@ -187,4 +196,10 @@ addMarkersToMap = (restaurants = self.restaurants) => {
     });
     self.markers.push(marker);
   });
+}
+
+showMap = me=>{
+  me.style.display = 'none';
+  const map  = document.getElementById('map');
+  map.style.display = 'block';
 }

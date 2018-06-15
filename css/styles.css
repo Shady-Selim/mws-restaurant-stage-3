@@ -285,6 +285,10 @@ nav h1 a {
   }
 }
 @media screen and (max-width: 450px){
+  #showMap {
+    height: 400px;
+    width: 100%;
+  }
   nav h1 {
     padding: 18px 0;
   }
