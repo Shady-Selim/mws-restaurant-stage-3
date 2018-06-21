@@ -279,9 +279,26 @@ nav h1 a {
 .filter-options h2 {
   line-height: inherit;
 }
+#review_form {
+  padding-bottom: 20px;
+}
+#review_form label {
+  display: inherit;
+}
+#review_form label input {
+  position: absolute;
+  left: 120px;
+}
+#review_form label textarea {
+  width: 100%;
+}
 @media screen and (min-width: 451px){
   #restaurants-list li {
     display: inline-block;
+  }
+  #add-review-container {
+    padding: 30px 40px 80px;
+    width: 45%;
   }
 }
 @media screen and (max-width: 450px){
@@ -302,7 +319,7 @@ nav h1 a {
     width: 100%;
     margin-bottom: 90px;
   }
-  #restaurant-container, #reviews-container {
+  #restaurant-container, #reviews-container, #add-review-container {
     padding: 0 40px;
     width: auto;
   }

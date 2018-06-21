@@ -35,11 +35,7 @@ fetchNeighborhoods = () => {
       fillNeighborhoodsHTML();
     }
   });
-  // fetch('http://localhost:1337/restaurants')
-  //   .then(response=> {
-  //     self.neighborhoods = response.json();
-  //     fillNeighborhoodsHTML();})
-  //   .catch(()=>{console.log("It Failed")})
+  
 }
 
 /**
@@ -181,6 +177,21 @@ createRestaurantHTML = (restaurant) => {
   more.href = DBHelper.urlForRestaurant(restaurant);
   li.append(more)
 
+  // console.log("favoroite", restaurant.id +" "+ restaurant.is_favorite);
+  // const favoriteLable = document.createElement('label');
+  // favoriteLable.setAttribute('for','is-favorite'+ restaurant.id);
+  // favoriteLable.innerHTML = " Is Favorite? ";
+  // const favoriteInput = document.createElement('input');
+  // favoriteInput.setAttribute('type','checkbox');
+  // favoriteInput.setAttribute('onchange',`toggleFavorite(this, ${restaurant.id})`);
+  // favoriteInput.setAttribute('id','is-favorite'+ restaurant.id);
+  // favoriteInput.setAttribute('value','is-favorite');
+  // if (restaurant.is_favorite) {
+  //   favoriteInput.setAttribute('checked','checked');
+  // }
+  // favoriteLable.append(favoriteInput);
+  // li.append(favoriteLable);
+
   return li
 }
 
@@ -203,3 +214,19 @@ showMap = me=>{
   const map  = document.getElementById('map');
   map.style.display = 'block';
 }
+
+// toggleFavorite = (me, restaurant_id) => {
+//   let xhr = new XMLHttpRequest();
+//   xhr.open('POST', `http://localhost:1337/restaurants/${restaurant_id}/?is_favorite=${me.checked}`);
+//   xhr.onload = () => {
+//     if (xhr.status === 200) { 
+//       DBHelper.fetchRestaurantById(restaurant_id, (error, restaurant) => {
+//         self.restaurant = restaurant;
+//       });
+//       console.log("toggleFavorite yes ");
+//     } else { 
+//       console.log("toggleFavorite no ");
+//     }
+//   };
+//   xhr.send();
+// }

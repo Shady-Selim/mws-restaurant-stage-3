@@ -1,4 +1,3 @@
-const dbName = 'restaurants';
 /**
  * Common database helper functions.
  */
@@ -9,27 +8,31 @@ class DBHelper {
    */
   static get DATABASE_URL() {
     const port = 1337 // Change this to your server port
-    return `http://localhost:${port}/restaurants`;
+    return `http://localhost:${port}/`;
   }
 
   /**
    * Fetch all restaurants.
    */
-  static fetchRestaurants(callback) {
-    let xhr = new XMLHttpRequest();
-    xhr.open('GET', DBHelper.DATABASE_URL);
-    xhr.onload = () => {
-      if (xhr.status === 200) { // Got a success response from server!
-        const json = JSON.parse(xhr.responseText);
-        const restaurants = json;
-        DBHelper.dbOpenUpdate(restaurants);
-        callback(null, restaurants);
-      } else { // Oops!. Got an error from server.
-        const error = (`Request failed. Returned status of ${xhr.status}`);
-        DBHelper.dbGet(callback);
-      }
-    };
-    xhr.send();
+  static fetchTable(tableName, callback, ID) {
+    if (navigator.onLine) {
+      let xhr = new XMLHttpRequest();
+      xhr.open('GET', DBHelper.DATABASE_URL + tableName);
+      xhr.onload = () => {
+        if (xhr.status === 200) { // Got a success response from server!
+          const json = JSON.parse(xhr.responseText);
+          const data = json;
+          DBHelper.dbOpenUpdate(data, tableName, ID);
+          callback(null, data);
+        } else { // Oops!. Got an error from server.
+          console.error(`Request ${tableName} failed. Returned status of ${xhr.status}`);
+          DBHelper.dbGet(callback, tableName, ID);
+        }
+      };
+      xhr.send();
+    }else {
+      DBHelper.dbGet(callback, tableName, ID);
+    }
   }
 
   /**
@@ -37,7 +40,7 @@ class DBHelper {
    */
   static fetchRestaurantById(id, callback) {
     // fetch all restaurants with proper error handling.
-    DBHelper.fetchRestaurants((error, restaurants) => {
+    DBHelper.fetchTable('restaurants', (error, restaurants) => {
       if (error) {
         callback(error, null);
       } else {
@@ -48,7 +51,7 @@ class DBHelper {
           callback('Restaurant does not exist', null);
         }
       }
-    });
+    }, 1);
   }
 
   /**
@@ -56,7 +59,7 @@ class DBHelper {
    */
   static fetchRestaurantByCuisine(cuisine, callback) {
     // Fetch all restaurants  with proper error handling
-    DBHelper.fetchRestaurants((error, restaurants) => {
+    DBHelper.fetchTable('restaurants', (error, restaurants) => {
       if (error) {
         callback(error, null);
       } else {
@@ -64,7 +67,7 @@ class DBHelper {
         const results = restaurants.filter(r => r.cuisine_type == cuisine);
         callback(null, results);
       }
-    });
+    }, 1);
   }
 
   /**
@@ -72,7 +75,7 @@ class DBHelper {
    */
   static fetchRestaurantByNeighborhood(neighborhood, callback) {
     // Fetch all restaurants
-    DBHelper.fetchRestaurants((error, restaurants) => {
+    DBHelper.fetchTable('restaurants', (error, restaurants) => {
       if (error) {
         callback(error, null);
       } else {
@@ -80,7 +83,7 @@ class DBHelper {
         const results = restaurants.filter(r => r.neighborhood == neighborhood);
         callback(null, results);
       }
-    });
+    }, 1);
   }
 
   /**
@@ -88,7 +91,7 @@ class DBHelper {
    */
   static fetchRestaurantByCuisineAndNeighborhood(cuisine, neighborhood, callback) {
     // Fetch all restaurants
-    DBHelper.fetchRestaurants((error, restaurants) => {
+    DBHelper.fetchTable('restaurants', (error, restaurants) => {
       if (error) {
         callback(error, null);
       } else {
@@ -101,7 +104,7 @@ class DBHelper {
         }
         callback(null, results);
       }
-    });
+    }, 1);
   }
 
   /**
@@ -109,7 +112,7 @@ class DBHelper {
    */
   static fetchNeighborhoods(callback) {
     // Fetch all restaurants
-    DBHelper.fetchRestaurants((error, restaurants) => {
+    DBHelper.fetchTable('restaurants', (error, restaurants) => {
       if (error) {
         callback(error, null);
       } else {
@@ -119,7 +122,7 @@ class DBHelper {
         const uniqueNeighborhoods = neighborhoods.filter((v, i) => neighborhoods.indexOf(v) == i)
         callback(null, uniqueNeighborhoods);
       }
-    });
+    }, 1);
   }
 
   /**
@@ -127,7 +130,7 @@ class DBHelper {
    */
   static fetchCuisines(callback) {
     // Fetch all restaurants
-    DBHelper.fetchRestaurants((error, restaurants) => {
+    DBHelper.fetchTable('restaurants', (error, restaurants) => {
       if (error) {
         callback(error, null);
       } else {
@@ -137,7 +140,7 @@ class DBHelper {
         const uniqueCuisines = cuisines.filter((v, i) => cuisines.indexOf(v) == i)
         callback(null, uniqueCuisines);
       }
-    });
+    }, 1);
   }
 
   /**
@@ -168,7 +171,7 @@ class DBHelper {
     return marker;
   }
 
-  static dbOpenUpdate(entity) {
+  static dbOpenUpdate(entity, dbName, ID) {
     let objectStore, db;
     const indexedDB = window.indexedDB || window.mozIndexedDB || window.webkitIndexedDB || window.msIndexedDB;
     if (!indexedDB) {
@@ -187,7 +190,12 @@ class DBHelper {
           console.log('[ServiceWorker] Event on transaction complete ', event);
         }
         objectStore = transaction.objectStore(dbName);
-        objectStore.put({ id: "1", restaurants: entity});
+        if (dbName == 'restaurants')
+          objectStore.put({ id: ID, restaurants: entity});
+        else if (dbName == 'reviews')
+          objectStore.put({ id: ID, reviews: entity});
+        else if (dbName == 'reviews_temp')
+          objectStore.put({ id: Math.floor((Math.random() * 99)), reviews: entity});
         return;
       }
     };
@@ -198,33 +206,57 @@ class DBHelper {
         objectStore.transaction.oncomplete = event => {
           console.log('[ServiceWorker] Event on transaction complete ', event);
           objectStore = db.transaction([ dbName ], 'readwrite').objectStore(dbName);
-          objectStore.add({ id: "1", restaurants: entity});
-          return;
         };
     };
   };
 
-  static dbGet(callback){
+  static dbGet(callback, dbName, ID){
     const indexedDB =  window.indexedDB || window.mozIndexedDB || window.webkitIndexedDB || window.msIndexedDB;
     let objectStore, db, data;
     const request = indexedDB.open(`${dbName}-db`, 1);
     request.onsuccess = event => {
       db = request.result;
-      const transaction = db.transaction(dbName, 'readonly');
-      transaction.oncomplete = event => {
-        console.log('[ServiceWorker] Event on transaction complete ', event);
-      }
-      objectStore = transaction.objectStore(dbName);
-      objectStore.getAll().onsuccess = event => {
-        data = event.target.result;
-        if(!data){
-          console.error('[ServiceWorker] Error while fetching data => ', error);
-          callback(error, null);
-          return;
+      if (db.objectStoreNames.length == 0)
+        return;
+      if (dbName == 'reviews_temp') {
+        const transaction = db.transaction(dbName, 'readwrite');
+        transaction.oncomplete = event => {
+          console.log('[ServiceWorker] Event on transaction complete ', event);
         }
-        callback(null, data[0].restaurants);
+        objectStore = transaction.objectStore(dbName);
+        objectStore.getAll().onsuccess = event => {
+          data = event.target.result;
+          if(!data){
+            console.error('[ServiceWorker] Error while fetching data => ', error);
+            callback(error, null);
+            return;
+          }
+          callback(null, data);
+          data.forEach(review => {
+            objectStore.delete(review.id).onsuccess = event => {
+              console.log('[ServiceWorker] Deleted record')
+            }
+          });
+        }
+      } else {
+        const transaction = db.transaction(dbName, 'readonly');
+        transaction.oncomplete = event => {
+          console.log('[ServiceWorker] Event on transaction complete ', event);
+        }
+        objectStore = transaction.objectStore(dbName);
+        objectStore.get(ID).onsuccess = event => {
+          data = event.target.result;
+          if(!data){
+            console.error('[ServiceWorker] Error while fetching data => ', error);
+            callback(error, null);
+            return;
+          }
+          if (dbName == 'restaurants')
+            callback(null, data.restaurants);
+          else if (dbName == 'reviews')
+            callback(null, data.reviews);
+        }
       }
     }
   }
-
 }

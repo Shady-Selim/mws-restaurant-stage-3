@@ -55,6 +55,10 @@ fillRestaurantHTML = (restaurant = self.restaurant) => {
   const address = document.getElementById('restaurant-address');
   address.innerHTML = restaurant.address;
 
+  const isfavorite = document.getElementById('is-favorite');
+  isfavorite.checked = restaurant.is_favorite;
+  // console.log("is favorite", restaurant.is_favorite);
+
   let imgSrc = DBHelper.imageUrlForRestaurant(restaurant);
   if (imgSrc != "/img/undefined"){
     const image = document.getElementById('restaurant-img');
@@ -72,7 +76,8 @@ fillRestaurantHTML = (restaurant = self.restaurant) => {
     fillRestaurantHoursHTML();
   }
   // fill reviews
-  fillReviewsHTML();
+  checkOfflineReviews();
+  fillreviews();
 }
 
 /**
@@ -98,7 +103,11 @@ fillRestaurantHoursHTML = (operatingHours = self.restaurant.operating_hours) => 
 /**
  * Create all reviews HTML and add them to the webpage.
  */
-fillReviewsHTML = (reviews = self.restaurant.reviews) => {
+fillReviewsHTML = (reviews) => {
+  // fetch(`http://localhost:1337/reviews/?restaurant_id=${self.restaurant.id}`)
+  //   .then(response=> {reviews = response.json(); console.log("Review response ", response)})
+  //   .catch(()=>{console.log("It Failed")});
+  
   const container = document.getElementById('reviews-container');
   const title = document.createElement('h3');
   title.innerHTML = 'Reviews';
@@ -131,7 +140,7 @@ createReviewHTML = (review) => {
 
   const date = document.createElement('p');
   date.className = "review-date";
-  date.innerHTML = review.date;
+  date.innerHTML = new Date(review.createdAt).toDateString();;
   div.appendChild(date);
   li.appendChild(div);
 
@@ -171,4 +180,111 @@ getParameterByName = (name, url) => {
   if (!results[2])
     return '';
   return decodeURIComponent(results[2].replace(/\+/g, ' '));
+}
+
+toggleFavorite = (me) => {
+  let xhr = new XMLHttpRequest();
+  xhr.open('PUT', `${DBHelper.DATABASE_URL}restaurants/${self.restaurant.id}/?is_favorite=${me.checked}`);
+  xhr.onload = () => {
+    if (xhr.status === 200) { 
+      DBHelper.fetchRestaurantById(self.restaurant.id, (error, restaurant) => {
+        self.restaurant = restaurant;
+      });
+    } else { 
+      console.log("toggleFavorite error ");
+    }
+  };
+  xhr.send();
+}
+
+fillreviews = () => {
+  if (navigator.onLine) {
+    let xhr = new XMLHttpRequest();
+    xhr.open('GET', `${DBHelper.DATABASE_URL}reviews/?restaurant_id=${self.restaurant.id}`);
+    xhr.onload = () => {
+      // console.log("Status ", xhr.status);
+      if (xhr.status === 200) { // Got a success response from server!
+        fillReviewsHTML(JSON.parse(xhr.responseText));
+        DBHelper.dbOpenUpdate(JSON.parse(xhr.responseText), 'reviews', self.restaurant.id);
+        // console.log("reviews ", xhr.responseText);
+        return;
+      } else { // Oops!. Got an error from server.
+        const error = (`Request failed. Returned status of ${xhr.status}`);
+        fillReviewsHTML(self.restaurant.reviews);
+      }
+    };
+    xhr.addEventListener("error", transferFailed);
+    xhr.send();
+  } else {
+    DBHelper.dbGet((error, reviews) => {
+      if (error) {
+        callback(error, null);
+      } else {
+        // const review = Array.from(reviews).filter(r => r.restaurant_id == self.restaurant.id);
+        if (reviews) { 
+          fillReviewsHTML(reviews)
+        } else { 
+          fillReviewsHTML(self.restaurant.reviews);
+        }
+      }
+    }, 'reviews', self.restaurant.id);
+  }
+}
+
+addReview = () => {
+  // const reviewer_name = document.getElementById('reviewer_name');
+  // const rating = document.getElementById('rating');
+  // const comment_text = document.getElementById('comment_text');
+  if (navigator.onLine) {
+    let xhr = new XMLHttpRequest();
+    xhr.open('POST', `${DBHelper.DATABASE_URL}reviews/`);
+    xhr.onload = () => {
+      if (xhr.status === 201) { 
+        //fillreviews();
+        fillReviewsHTML([{comments:comment_text.value, createdAt: new Date(), name: reviewer_name.value, rating: rating.value}]);
+        review_form.reset();
+      } else { 
+        console.log("toggleFavorite error ");
+      }
+    };
+    xhr.addEventListener("error", transferFailed);
+    xhr.send(JSON.stringify({ restaurant_id: self.restaurant.id, name: reviewer_name.value, rating: rating.value, comments: comment_text.value }));
+  }else {
+    DBHelper.dbOpenUpdate(JSON.stringify({ restaurant_id: self.restaurant.id, name: reviewer_name.value, rating: rating.value, comments: comment_text.value }), 'reviews_temp', 0);
+    fillReviewsHTML([{comments:comment_text.value, createdAt: new Date(), name: reviewer_name.value, rating: rating.value}]);
+    review_form.reset();
+    localStorage.setItem('hasOfflineReview', true);
+    alert('Message will be sent once device goes online!');
+  }
+}
+
+transferFailed = (evt) => {
+  console.error("error sending new data ", evt);
+}
+
+checkOfflineReviews = ()=> {
+  if (navigator.onLine && localStorage.getItem('hasOfflineReview')) {
+    DBHelper.dbGet((error, reviews) => {
+      if (error) {
+        callback(error, null);
+      } else {
+        if (reviews) { 
+          reviews.forEach(review => {
+            let xhr = new XMLHttpRequest();
+            // console.log(review.reviews);
+            const data = JSON.parse(review.reviews)
+            xhr.open('POST', `${DBHelper.DATABASE_URL}reviews/`);
+            xhr.onload = () => {
+              if (xhr.status === 201) { 
+              } else { 
+                console.log("sending offline data error ");
+              }
+            };
+            xhr.send(JSON.stringify({ restaurant_id: data.restaurant_id, name: data.name, rating: data.rating, comments: data.comments }));
+          });
+          localStorage.setItem('hasOfflineReview', false);
+        } 
+      }
+    }, 'reviews_temp', 0);
+  }
 }

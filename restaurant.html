@@ -4,13 +4,14 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>@media (max-width:450px){#breadcrumb,#restaurant-cuisine,#restaurant-img,#showMap,.inside #footer{width:100%}#showMap{height:400px}nav h1{padding:18px 0}.inside #map-container{height:250px;padding-top:50px;position:relative;width:100%;margin-bottom:90px}#add-review-container,#restaurant-container,#reviews-container{padding:0 40px;width:auto}#footer{font-size:7pt;padding:18px 0;position:relative!important}.review-info{background:#333;height:17px;padding:5px 33px;margin:0 -30px 10px}.review-name{float:left;color:#fff}.review-date{float:right;color:#ccc}.rating{clear:both;background:orange;color:#fff;text-transform:uppercase;width:66px;padding:0 10px;border-radius:3px}#restaurant-img,#reviews-container li{border-radius:15px 0}#maincontent select{width:auto;padding:0}}</style>  
   <link rel="manifest" href="manifest.json">
   <meta name="theme-color" content="#333">
   <link rel="shortcut icon" href="img/48.png">
   <!-- Normalize.css for better cross-browser consistency -->
-  <link rel="stylesheet" src="//normalize-css.googlecode.com/svn/trunk/normalize.css" />
+  <link rel="stylesheet" media="screen" src="//normalize-css.googlecode.com/svn/trunk/normalize.css" />
   <!-- Main CSS file -->
-  <link rel="stylesheet" href="css/styles.css" type="text/css">
+  <link rel="stylesheet" media="screen" href="css/styles.min.css" type="text/css">
   <title>Restaurant Info</title>
 </head>
 
@@ -42,6 +43,7 @@
       <h2 id="restaurant-name"></h2>
       <img id="restaurant-img">
       <p id="restaurant-cuisine"></p>
+      <label for="is-favorite">Is Favorite? <input type="checkbox" onchange="toggleFavorite(this)" id="is-favorite" value="is-favorite" /> </label>
       <p id="restaurant-address"></p>
       <table id="restaurant-hours"></table>
     </section>
@@ -51,6 +53,21 @@
       <ul id="reviews-list"></ul>
     </section>
     <!-- End reviews -->
+    <section id="add-review-container">
+      <h3>Submit your restaurant review</h3>
+      <form id="review_form" action="javascript:;" onsubmit="addReview()">
+        <label for="reviewer_name">Your Name:
+          <input id="reviewer_name" type="text" placeholder="Your name .." required>
+        </label>
+        <label for="rating">Your Rating:
+          <input type="number" placeholder="1-5" min="1" max="5" id="rating" required>
+        </label>
+        <label for="comment_text">Add Your Review:
+          <textarea id="comment_text" rows="5" placeholder="Add your review here .." required></textarea>
+        </label>
+        <button title="Add Review" type="submit">Submit</button>
+      </form>
+</section>
   </main>
   <!-- End main -->
 
@@ -62,9 +79,9 @@
 
   <!-- Beginning scripts -->
   <!-- Database helpers -->
-  <script type="text/javascript" src="js/dbhelper.js"></script>
+  <script type="text/javascript" src="js/dbhelper.min.js"></script>
   <!-- Main javascript file -->
-  <script type="text/javascript" src="js/restaurant_info.js"></script>
+  <script type="text/javascript" src="js/restaurant_info.min.js"></script>
   <script type="text/javascript" src="js/echo.min.js"></script>
   <script>echo.init();</script>
   <!-- Google Maps -->
