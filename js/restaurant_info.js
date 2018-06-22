@@ -1,6 +1,38 @@
 let restaurant;
 var map;
 
+window.addEventListener('load', function() {
+  function updateOnlineStatus(event) {
+    if (navigator.onLine && localStorage.getItem('hasOfflineReview')) {
+      DBHelper.dbGet((error, reviews) => {
+        if (error) {
+          callback(error, null);
+        } else {
+          if (reviews) { 
+            reviews.forEach(review => {
+              let xhr = new XMLHttpRequest();
+              // console.log(review.reviews);
+              const data = JSON.parse(review.reviews)
+              xhr.open('POST', `${DBHelper.DATABASE_URL}reviews/`);
+              xhr.onload = () => {
+                if (xhr.status === 201) { 
+                } else { 
+                  console.log("sending offline data error ");
+                }
+              };
+              xhr.send(JSON.stringify({ restaurant_id: data.restaurant_id, name: data.name, rating: data.rating, comments: data.comments }));
+            });
+            localStorage.setItem('hasOfflineReview', false);
+          } 
+        }
+      }, 'reviews_temp', 0);
+    }
+  }
+
+  window.addEventListener('online',  updateOnlineStatus);
+  // window.addEventListener('offline', updateOnlineStatus);
+});
+
 /**
  * Initialize Google map, called from HTML.
  */
@@ -76,7 +108,6 @@ fillRestaurantHTML = (restaurant = self.restaurant) => {
     fillRestaurantHoursHTML();
   }
   // fill reviews
-  checkOfflineReviews();
   fillreviews();
 }
 
@@ -260,31 +291,4 @@ addReview = () => {
 
 transferFailed = (evt) => {
   console.error("error sending new data ", evt);
-}
-
-checkOfflineReviews = ()=> {
-  if (navigator.onLine && localStorage.getItem('hasOfflineReview')) {
-    DBHelper.dbGet((error, reviews) => {
-      if (error) {
-        callback(error, null);
-      } else {
-        if (reviews) { 
-          reviews.forEach(review => {
-            let xhr = new XMLHttpRequest();
-            // console.log(review.reviews);
-            const data = JSON.parse(review.reviews)
-            xhr.open('POST', `${DBHelper.DATABASE_URL}reviews/`);
-            xhr.onload = () => {
-              if (xhr.status === 201) { 
-              } else { 
-                console.log("sending offline data error ");
-              }
-            };
-            xhr.send(JSON.stringify({ restaurant_id: data.restaurant_id, name: data.name, rating: data.rating, comments: data.comments }));
-          });
-          localStorage.setItem('hasOfflineReview', false);
-        } 
-      }
-    }, 'reviews_temp', 0);
-  }
 }
