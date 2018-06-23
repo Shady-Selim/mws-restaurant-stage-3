@@ -203,9 +203,7 @@ nav h1 a {
   width: 100%;
 }
 .inside #footer {
-  bottom: 0;
-  position: absolute;
-  width: 50%;
+  position: relative;
 }
 #restaurant-name {
   color: #f18200;
@@ -218,7 +216,7 @@ nav h1 a {
   line-height: 1.1;
 }
 #restaurant-img {
-	width: 90%;
+	width: 100%;
 }
 #restaurant-address {
   font-size: 12pt;
@@ -234,16 +232,15 @@ nav h1 a {
   padding: 2px 0;
   text-align: center;
   text-transform: uppercase;
-	width: 90%;
 }
-#restaurant-container, #reviews-container {
+#restaurant-container, #reviews-container, #add-review-container {
   border-bottom: 1px solid #d9d9d9;
   border-top: 1px solid #fff;
-  padding: 140px 40px 30px;
-  width: 50%;
+  padding: 10px 3%;
+  width: 44%;
 }
-#reviews-container {
-  padding: 30px 40px 80px;
+#restaurant-container {
+  padding-top: 125px;
 }
 #reviews-container h2 {
   color: #f58500;
@@ -292,16 +289,45 @@ nav h1 a {
 #review_form label textarea {
   width: 100%;
 }
-@media screen and (min-width: 451px){
+.rating {
+  clear: both;
+  background: orange;
+  color: white;
+  text-transform: uppercase;
+  width: 66px;
+  padding: 0 10px;
+  border-radius: 3px;
+}
+#restaurant-img, #reviews-container li {
+  border-radius: 15px 0;
+}
+#maincontent select {
+  width: auto;
+  padding: 0;
+}
+.review-info {
+  background: #333;
+  height: 17px;
+  padding: 5px 33px;
+  margin: 0 -30px 10px;
+}
+.review-name { 
+  float: left;
+  color: white;
+}
+.review-date {
+  float: right;
+  color: #ccc;
+}
+@media (min-width: 451px){
   #restaurants-list li {
     display: inline-block;
   }
-  #add-review-container {
-    padding: 30px 40px 80px;
-    width: 45%;
-  }
 }
-@media screen and (max-width: 450px){
+@media (max-width: 450px){
+  #restaurants-list li {
+    width: auto;
+  }
   #showMap {
     height: 400px;
     width: 100%;
@@ -309,7 +335,7 @@ nav h1 a {
   nav h1 {
     padding: 18px 0;
   }
-  #breadcrumb, #restaurant-img, #restaurant-cuisine, .inside #footer {
+  #breadcrumb {
     width: 100%;
   }
   .inside #map-container {
@@ -326,36 +352,5 @@ nav h1 a {
   #footer {
     font-size: 7pt;
     padding: 18px 0;
-    position: relative !important;
-  }
-  .review-info {
-    background: #333;
-    height: 17px;
-    padding: 5px 33px;
-    margin: 0 -30px 10px;
-  }
-  .review-name { 
-    float: left;
-    color: white;
-  }
-  .review-date {
-    float: right;
-    color: #ccc;
-  }
-  .rating {
-    clear: both;
-    background: orange;
-    color: white;
-    text-transform: uppercase;
-    width: 66px;
-    padding: 0 10px;
-    border-radius: 3px;
-  }
-  #restaurant-img, #reviews-container li {
-    border-radius: 15px 0;
-  }
-  #maincontent select {
-    width: auto;
-    padding: 0;
   }
 }
